@@ -19,7 +19,7 @@
 #define SD_CS_PIN 4
 #define BMP_CS_PIN 3 //actual
 #define GROUND_PRESSURE 1013.25
-#define WRITE_INTERVAL 2000
+#define WRITE_INTERVAL 10000
 #define PRINT_TIME 1000
 #define TRANSMIT_INTERVAL 180000 
 
@@ -95,10 +95,11 @@ SIGNAL(TIMER0_COMPA_vect) {
 
 void loop() {
   tick();
-  if(rock_block_start - millis() >= TRANSMIT_INTERVAL) {
+  if(millis() - rock_block_start >= TRANSMIT_INTERVAL) {
     rock_block_start = millis();
     rockBlockSendReceive(getRockBlockMessage());
   }
+  delay(20);
 }
 
 void tick(){
@@ -107,7 +108,6 @@ void tick(){
   run_heaters();
   log_data();
   print_data();
-  delay(20);
 }
 
 String getRockBlockMessage(){
@@ -265,6 +265,10 @@ void print_data(){
       Serial.print(GPS.latitude, 4); Serial.print(GPS.lat);
       Serial.print(", "); 
       Serial.print(GPS.longitude, 4); Serial.println(GPS.lon);
+      Serial.print("Location (in degrees, works with Google Maps): ");
+      Serial.print(GPS.latitudeDegrees, 4);
+      Serial.print(", "); 
+      Serial.println(GPS.longitudeDegrees, 4);
       
       Serial.print("Speed (knots): "); Serial.println(GPS.speed);
       Serial.print("Angle: "); Serial.println(GPS.angle);
