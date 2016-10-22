@@ -51,6 +51,8 @@ boolean usingInterrupt = false;
 void useInterrupt(boolean); // Func prototype keeps Arduino 0023 happy
 String getRockBlockMessage();
 
+unsigned long message_number = 0;
+
 void useInterrupt(boolean v) {
   if (v) {
     // Timer0 is already used for millis() - we'll just interrupt somewhere
@@ -69,6 +71,7 @@ void setup() {
   Serial.begin(115200);
   if(!SD.begin(SD_CS_PIN)){
     Serial.println("No valid SD card found!");
+    //while(1);
   }
   log_header();
   GPS.begin(9600);
@@ -112,11 +115,7 @@ void tick(){
 
 String getRockBlockMessage(){
   String working_text = "";
-  working_text += GPS.hour;
-  working_text += ",";
-  working_text += GPS.minute;
-  working_text += ",";
-  working_text += GPS.seconds;
+  working_text += message_number;
   working_text += ",";
   working_text += altitude;
   working_text += ",";
@@ -131,6 +130,10 @@ String getRockBlockMessage(){
   } else {
     working_text += "0";
   }
+  working_text += ",";
+  working_text += String(GPS.latitudeDegrees, 4);
+  working_text += ",";
+  working_text += String(GPS.longitudeDegrees, 4);
   
   return working_text; 
 }
@@ -166,6 +169,8 @@ void log_data(){
     data_log = SD.open("data_log.csv", FILE_WRITE);
     delay(50);
     if(data_log){
+      data_log.print(message_number);
+      data_log.print(",");
       data_log.print(millis());
       data_log.print(",");
       data_log.print(internal_temp);
@@ -197,9 +202,9 @@ void log_data(){
       data_log.print((int)GPS.fixquality); 
       if (GPS.fix) {
         data_log.print(",");
-        data_log.print(GPS.latitude, 4); data_log.print(GPS.lat);
-        data_log.print(","); 
-        data_log.print(GPS.longitude, 4); data_log.print(GPS.lon);
+        data_log.print(GPS.latitudeDegrees, 4);
+        data_log.print(", "); 
+        data_log.print(GPS.longitudeDegrees, 4);
         data_log.print(",");
         data_log.print(GPS.speed);
         data_log.print(",");
@@ -222,7 +227,7 @@ void log_header(){
   data_log = SD.open("data_log.csv", FILE_WRITE);
   delay(500);
   if(data_log){
-    data_log.println("Time,Internal temp,External temp,Pressure,Altitude,Heater Status,GPS Time,GPS Date,GPS Fix,GPS Fix Quality,GPS Latitude,GPS Longitude,GPS Speed,GPS Angle,GPS Altitude,GPS Satellites");
+    data_log.println("Message Number,Time,Internal temp,External temp,Pressure,Altitude,Heater Status,GPS Time,GPS Date,GPS Fix,GPS Fix Quality,GPS Latitude,GPS Longitude,GPS Speed,GPS Angle,GPS Altitude,GPS Satellites");
     data_log.close();
   }
 }
@@ -232,6 +237,8 @@ void print_data(){
   if(print_elapsed_time > PRINT_TIME){
     print_start_time = millis();
     print_elapsed_time = 0;
+    Serial.print("Message number: ");
+    Serial.println(message_number);
     Serial.print("Time since power on: ");
     Serial.println(millis());
     Serial.print("Internal temp: ");

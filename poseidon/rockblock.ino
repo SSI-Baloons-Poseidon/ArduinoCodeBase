@@ -81,6 +81,7 @@ void rockBlockSendReceive(String message){
   //Send: hrs, min, secs, alt, pressure, int, ext, GPS data
 
   err = isbd.sendSBDText(buffer);
+  message_number++;
   if (err != 0)
   {
     Serial.print("sendSBDText failed: error ");
